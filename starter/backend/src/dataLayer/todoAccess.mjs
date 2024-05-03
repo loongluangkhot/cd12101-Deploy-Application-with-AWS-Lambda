@@ -2,14 +2,15 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import AWSXRay from "aws-xray-sdk-core"
 
-const dynamoDbDocument = DynamoDBDocument.from(new DynamoDB())
-const s3Client = new S3Client()
+const dynamoDbDocument = DynamoDBDocument.from(AWSXRay.captureAWSv3Client(new DynamoDB()))
+const s3Client = AWSXRay.captureAWSv3Client(new S3Client())
 
 const todosTable = process.env.TODOS_TABLE
 const attachmentsTable = process.env.ATTACHMENTS_TABLE
 const attachmentsBucket = process.env.ATTACHMENTS_S3_BUCKET
-const signedUrlExpiration = process.env.SIGNED_URL_EXPIRATION;
+const signedUrlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 export async function getTodos(userId) {
   const res = await dynamoDbDocument.query({
@@ -60,18 +61,23 @@ export async function getAttachment(todoId) {
   return res.Item
 }
 
-export async function putAttachmentUrl(attachment) {
+
+export function getAttachmentUrl(attachmentId) {
+  return $`https://${attachmentsBucket}.s3.amazonaws.com/${attachmentId}`
+}
+
+export async function putAttachment(attachment) {
   await dynamoDbClient.put({
     TableName: attachmentsTable,
-    Item: attachment,
+    Item: attachment
   })
   return attachment
 }
 
-async function getAttachmentUploadUrl(todoId) {
+export async function getAttachmentUploadUrl(attachmentId) {
   const command = new PutObjectCommand({
     Bucket: attachmentsBucket,
-    Key: todoId
+    Key: attachmentId
   })
   const url = await getSignedUrl(s3Client, command, {
     expiresIn: signedUrlExpiration

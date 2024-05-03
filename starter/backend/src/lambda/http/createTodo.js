@@ -2,7 +2,10 @@ import middy from '@middy/core'
 import cors from '@middy/http-cors'
 import createError from 'http-errors'
 import { createTodo } from '../../businessLogic/todos.mjs'
-import { getUserId } from '../utils.mjs'
+import { getTime, getTraceId, getUserId } from '../utils.mjs'
+import { createLogger } from '../../utils/logger.mjs'
+
+const logger = createLogger("createTodo")
 
 export const handler = middy()
   .use(httpErrorHandler())
@@ -12,18 +15,34 @@ export const handler = middy()
     })
   )
   .handler(async (event) => {
-    // TODO: Get all TODO items for a current user
-    try {
-      const { name, dueDate } = JSON.parse(event.body)
-      const userId = getUserId(event)
-      const todoCreated = await createTodo(userId, name, dueDate)
 
-      // TODO: Check the expected output shape
+    const traceId = getTraceId(event)
+
+    try {
+      const timeStart = getTime()
+
+      const userId = getUserId(event)
+      const { name, dueDate } = JSON.parse(event.body)
+
+      logger.info(`[createTodo | ${traceId}] Received request for: ${userId} ${name} ${dueDate}`)
+
+      const item = await createTodo(userId, name, dueDate)
+
+      const timeEnd = getTime()
+      const timeTaken = timeEnd - timeStart
+
+      await putTimeTakenMetric("createTodo", timeTaken);
+
       return {
         statusCode: 201,
-        body: JSON.stringify(todoCreated)
+        body: JSON.stringify({
+          item
+        })
       }
     } catch (e) {
+
+      logger.error(`[createTodo | ${traceId}] Something went wrong: ${e.message}`)
+
       throw createError(
         400,
         JSON.stringify({

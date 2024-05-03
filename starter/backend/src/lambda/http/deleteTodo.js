@@ -2,6 +2,9 @@ import middy from '@middy/core'
 import cors from '@middy/http-cors'
 import createError from 'http-errors'
 import { deleteTodo } from '../../businessLogic/todos.mjs'
+import { createLogger } from '../../utils/logger.mjs'
+
+const logger = createLogger("deleteTodo")
 
 export const handler = middy()
   .use(httpErrorHandler())
@@ -11,14 +14,22 @@ export const handler = middy()
     })
   )
   .handler(async (event) => {
-    // TODO: Remove a TODO item by id
+    const traceId = getTraceId(event)
+
     try {
       const todoId = event.pathParameters.todoId
+
+      logger.info(`[deleteTodo | ${traceId}] Received request for: ${todoId}`)
+
+      
       await deleteTodo(todoId)
       return {
         statusCode: 200
       }
     } catch (e) {
+
+      logger.error(`[deleteTodo | ${traceId}] Something went wrong: ${e.message}`)
+
       throw createError(
         400,
         JSON.stringify({

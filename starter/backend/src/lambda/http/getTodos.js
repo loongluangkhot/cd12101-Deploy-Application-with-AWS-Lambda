@@ -3,6 +3,9 @@ import cors from '@middy/http-cors'
 import createError from 'http-errors'
 import { getUserId } from '../utils.mjs'
 import { getTodos } from '../../businessLogic/todos.mjs'
+import { createLogger } from '../../utils/logger.mjs'
+
+const logger = createLogger("getTodos")
 
 export const handler = middy()
   .use(httpErrorHandler())
@@ -12,12 +15,15 @@ export const handler = middy()
     })
   )
   .handler(async (event) => {
-    // TODO: Get all TODO items for a current user
+
+    const traceId = getTraceId(event)
+
     try {
       const userId = getUserId(event)
-      const items = await getTodos(userId)
-      // TODO: Populate with attachmentUrl
 
+      logger.info(`[getTodos | ${traceId}] Received request for: ${userId}`)
+
+      const items = await getTodos(userId)
       return {
         statusCode: 200,
         body: JSON.stringify({
@@ -25,6 +31,9 @@ export const handler = middy()
         })
       }
     } catch (e) {
+
+      logger.error(`[getTodos | ${traceId}] Something went wrong: ${e.message}`)
+
       throw createError(
         400,
         JSON.stringify({
