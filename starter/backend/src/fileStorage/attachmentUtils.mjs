@@ -2,19 +2,19 @@ import { v4 as uuidv4 } from 'uuid'
 import {
   getTodoInDbByTodoId,
   getAttachmentUploadUrl,
-  getAttachmentUrl,
+  getAttachmentUrlByAttachmentId,
   getAttachmentInDbByTodoId,
   putAttachmentInDb
 } from '../dataLayer/todoAccess.mjs'
 
-export async function generateUploadUrl(todoId) {
-  const todo = getTodoInDbByTodoId(todoId)
-  if (todo === null || todo === undefined) {
-    throw new Exception(`Todo with id ${todoId} does not exist!`)
+export async function generateUploadUrl(todoId, userId) {
+  const todo = await getTodoInDbByTodoId(todoId, userId)
+  if (todo === null) {
+    throw new Error(`Todo with id ${todoId} does not exist!`)
   }
 
   const attachmentId = uuidv4()
-  const attachmentUrl = getAttachmentUrl(attachmentId)
+  const attachmentUrl = getAttachmentUrlByAttachmentId(attachmentId)
   const attachment = {
     todoId,
     attachmentId,
@@ -26,9 +26,9 @@ export async function generateUploadUrl(todoId) {
   return await getAttachmentUploadUrl(attachmentId)
 }
 
-export async function getAttachmentUrl(todoId) {
-  const attachment = getAttachmentInDbByTodoId(todoId)
-  if (attachment === null || attachment === undefined) {
+export async function getAttachmentUrlByTodoId(todoId) {
+  const attachment = await getAttachmentInDbByTodoId(todoId)
+  if (attachment === null) {
     return null
   }
   return attachment.attachmentUrl

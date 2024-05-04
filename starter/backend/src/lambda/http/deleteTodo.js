@@ -4,7 +4,7 @@ import createError from 'http-errors'
 import { deleteTodo } from '../../businessLogic/todos.mjs'
 import { createLogger } from '../../utils/logger.mjs'
 import httpErrorHandler from '@middy/http-error-handler'
-import { getTraceId } from '../utils.mjs'
+import { getTraceId, getUserId } from '../utils.mjs'
 
 const logger = createLogger("deleteTodo")
 
@@ -19,12 +19,12 @@ export const handler = middy()
     const traceId = getTraceId(event)
 
     try {
+      const userId = getUserId(event)
       const todoId = event.pathParameters.todoId
 
-      logger.info(`[deleteTodo | ${traceId}] Received request for: ${todoId}`)
+      logger.info(`[deleteTodo | ${traceId}] Received request for: ${todoId} ${userId}`)
 
-      
-      await deleteTodo(todoId)
+      await deleteTodo(todoId, userId)
       return {
         statusCode: 200
       }

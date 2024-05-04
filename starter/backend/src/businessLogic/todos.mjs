@@ -5,20 +5,21 @@ import {
   putTodoInDb,
   deleteTodoInDbByTodoId
 } from '../dataLayer/todoAccess.mjs'
-import { getAttachmentUrl } from '../fileStorage/attachmentUtils.mjs'
+import { createLogger } from '../utils/logger.mjs'
+import { getAttachmentUrlByTodoId } from '../fileStorage/attachmentUtils.mjs'
+
+const logger = createLogger("todosBusinessLogic")
 
 export async function getTodos(userId) {
   const todos = await queryTodosInDbByUserId(userId)
-  if (todos.length <= 0) {
-    throw new Exception(`No todos found for userId ${userId}`)
-  }
-  const todosWithAttachmentUrl = todos.map((i) => {
-    const attachmentUrl = getAttachmentUrl(i.todoId)
+  const todosWithAttachmentUrl = await Promise.all(todos.map(async (i) => {
+    const attachmentUrl = await getAttachmentUrlByTodoId(i.todoId)
+    logger.info(`attachmentUrl for ${i.todoId}: ${attachmentUrl}`)
     return {
       ...i,
       attachmentUrl
     }
-  })
+  }))
 
   return todosWithAttachmentUrl
 }
@@ -39,10 +40,10 @@ export async function createTodo(userId, name, dueDate) {
   return item
 }
 
-export async function updateTodo(todoId, name, dueDate, done) {
-  const todo = getTodoInDbByTodoId(todoId)
-  if (todo === null || todo === undefined) {
-    throw new Exception(`Todo with id ${todoId} does not exist!`)
+export async function updateTodo(todoId, name, dueDate, done, userId) {
+  const todo = await getTodoInDbByTodoId(todoId, userId)
+  if (todo === null) {
+    throw new Error(`Todo with id ${todoId} does not exist!`)
   }
 
   const item = {
@@ -54,6 +55,6 @@ export async function updateTodo(todoId, name, dueDate, done) {
   return await putTodoInDb(item)
 }
 
-export async function deleteTodo(todoId) {
-  await deleteTodoInDbByTodoId(todoId)
+export async function deleteTodo(todoId, userId) {
+  await deleteTodoInDbByTodoId(todoId, userId)
 }

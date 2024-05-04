@@ -19,17 +19,10 @@ provider:
 
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
-    # TODOS_CREATED_AT_INDEX: CreatedAtIndex
+    TODOS_USER_ID_INDEX: TodosUserIdIndex
     ATTACHMENTS_TABLE: Attachments-${self:provider.stage}
     ATTACHMENTS_S3_BUCKET: todos-attachment-075671862722-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action: 'cloudwatch:PutMetricData'
-          Resource: '*'
 
 functions:
 
@@ -49,11 +42,21 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_USER_ID_INDEX}
       - Effect: Allow
         Action:
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.ATTACHMENTS_TABLE}
+      - Effect: Allow
+        Action: 
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   CreateTodo:
@@ -72,6 +75,16 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action: 
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   UpdateTodo:
@@ -84,13 +97,23 @@ functions:
           cors: true
           request:
             schemas:
-              application/json: ${file(models/create-todo-request.json)}
+              application/json: ${file(models/update-todo-request.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:GetItem
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action: 
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   DeleteTodo:
@@ -106,6 +129,16 @@ functions:
         Action:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action: 
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - '*'
 
   # TODO: Configure this function
   GenerateUploadUrl:
@@ -130,6 +163,16 @@ functions:
           - s3:PutObject
           - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*
+      - Effect: Allow
+        Action: 
+          - cloudwatch:PutMetricData
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - '*'
 
 resources:
   Resources:
@@ -155,8 +198,8 @@ resources:
             AttributeType: S
           # - AttributeName: dueDate
           #   AttributeType: S
-          # - AttributeName: createdAt
-          #   AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
           # - AttributeName: name
           #   AttributeType: S
           # - AttributeName: done
@@ -168,15 +211,15 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
-        # LocalSecondaryIndexes:
-        # - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
-        #   KeySchema:
-        #     - AttributeName: userId
-        #       KeyType: HASH
-        #     - AttributeName: createdAt
-        #       KeyType: RANGE
-        #   Projection:
-        #     ProjectionType: ALL
+        GlobalSecondaryIndexes:
+        - IndexName: ${self:provider.environment.TODOS_USER_ID_INDEX}
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
         
     AttachmentsDynamoDBTable:
       Type: AWS::DynamoDB::Table

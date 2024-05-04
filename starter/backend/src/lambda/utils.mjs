@@ -41,3 +41,7 @@ export async function putTimeTakenMetric(actionName, timeTakenInMs) {
   })
   await cloudwatch.send(command)
 }
+
+export function isEmpty(item) {
+  return item === undefined || item === null || Object.keys(item).length === 0
+}
