@@ -70,7 +70,7 @@ export async function getAttachmentInDbByTodoId(todoId) {
 
 
 export function getAttachmentUrlByAttachmentId(attachmentId) {
-  return $`https://${attachmentsBucket}.s3.amazonaws.com/${attachmentId}`
+  return `https://${attachmentsBucket}.s3.amazonaws.com/${attachmentId}`
 }
 
 export async function putAttachmentInDb(attachment) {
