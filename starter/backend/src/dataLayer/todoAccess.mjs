@@ -12,7 +12,7 @@ const attachmentsTable = process.env.ATTACHMENTS_TABLE
 const attachmentsBucket = process.env.ATTACHMENTS_S3_BUCKET
 const signedUrlExpiration = process.env.SIGNED_URL_EXPIRATION
 
-export async function getTodos(userId) {
+export async function queryTodosInDbByUserId(userId) {
   const res = await dynamoDbDocument.query({
     TableName: todosTable,
     IndexName: todoUserIndex,
@@ -24,7 +24,7 @@ export async function getTodos(userId) {
   return res.Items
 }
 
-export async function putTodo(todo) {
+export async function putTodoInDb(todo) {
   await dynamoDbClient.put({
     TableName: todosTable,
     Item: todo
@@ -32,7 +32,7 @@ export async function putTodo(todo) {
   return todo
 }
 
-export async function getTodo(todoId) {
+export async function getTodoInDbByTodoId(todoId) {
   const res = await dynamoDbClient.get({
     TableName: todosTable,
     Key: {
@@ -42,7 +42,7 @@ export async function getTodo(todoId) {
   return res.Item
 }
 
-export async function deleteTodo(todoId) {
+export async function deleteTodoInDbByTodoId(todoId) {
   await dynamoDbClient.delete({
     TableName: todosTable,
     Key: {
@@ -51,7 +51,7 @@ export async function deleteTodo(todoId) {
   })
 }
 
-export async function getAttachment(todoId) {
+export async function getAttachmentInDbByTodoId(todoId) {
   const res = await dynamoDbClient.get({
     TableName: attachmentsTable,
     Key: {
@@ -66,7 +66,7 @@ export function getAttachmentUrl(attachmentId) {
   return $`https://${attachmentsBucket}.s3.amazonaws.com/${attachmentId}`
 }
 
-export async function putAttachment(attachment) {
+export async function putAttachmentInDb(attachment) {
   await dynamoDbClient.put({
     TableName: attachmentsTable,
     Item: attachment

@@ -77,7 +77,7 @@ export function Todos() {
   async function onTodoDelete(todoId) {
     try {
       const accessToken = await getAccessTokenSilently({
-        audience: `https://test-endpoint.auth0.com/api/v2/`,
+        audience: process.env.REACT_APP_AUTH0_AUD,
         scope: 'delete:todo'
       })
       await deleteTodo(accessToken, todoId)
@@ -91,7 +91,7 @@ export function Todos() {
     try {
       const todo = todos[pos]
       const accessToken = await getAccessTokenSilently({
-        audience: `https://test-endpoint.auth0.com/api/v2/`,
+        audience: process.env.REACT_APP_AUTH0_AUD,
         scope: 'write:todo'
       })
       await patchTodo(accessToken, todo.todoId, {
@@ -127,8 +127,9 @@ export function Todos() {
   useEffect(() => {
     async function foo() {
       try {
+        console.log("Getting todos...")
         const accessToken = await getAccessTokenSilently({
-          audience: `https://test-endpoint.auth0.com/api/v2/`,
+          audience: process.env.REACT_APP_AUTH0_AUD,
           scope: 'read:todos'
         })
         console.log('Access token: ' + accessToken)

@@ -1,14 +1,14 @@
 import { v4 as uuidv4 } from 'uuid'
 import {
-  getTodo,
+  getTodoInDbByTodoId,
   getAttachmentUploadUrl,
   getAttachmentUrl,
-  getAttachment,
-  putAttachment
+  getAttachmentInDbByTodoId,
+  putAttachmentInDb
 } from '../dataLayer/todoAccess.mjs'
 
 export async function generateUploadUrl(todoId) {
-  const todo = getTodo(todoId)
+  const todo = getTodoInDbByTodoId(todoId)
   if (todo === null || todo === undefined) {
     throw new Exception(`Todo with id ${todoId} does not exist!`)
   }
@@ -21,13 +21,13 @@ export async function generateUploadUrl(todoId) {
     attachmentUrl
   }
 
-  await putAttachment(attachment)
+  await putAttachmentInDb(attachment)
 
   return await getAttachmentUploadUrl(attachmentId)
 }
 
 export async function getAttachmentUrl(todoId) {
-  const attachment = getAttachment(todoId)
+  const attachment = getAttachmentInDbByTodoId(todoId)
   if (attachment === null || attachment === undefined) {
     return null
   }

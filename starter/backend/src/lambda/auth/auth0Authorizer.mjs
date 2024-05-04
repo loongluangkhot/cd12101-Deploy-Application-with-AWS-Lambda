@@ -4,10 +4,11 @@ import { createLogger } from '../../utils/logger.mjs'
 
 const logger = createLogger('auth')
 
-const jwksUrl = 'https://test-endpoint.auth0.com/.well-known/jwks.json'
-
 export async function handler(event) {
   try {
+
+    logger.info(`[auth] received request: ${event.authorizationToken}`)
+
     const jwtToken = await verifyToken(event.authorizationToken)
 
     return {

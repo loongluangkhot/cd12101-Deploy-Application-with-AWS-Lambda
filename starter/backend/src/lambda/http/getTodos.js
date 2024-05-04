@@ -1,9 +1,10 @@
 import middy from '@middy/core'
 import cors from '@middy/http-cors'
 import createError from 'http-errors'
-import { getUserId } from '../utils.mjs'
-import { getTodos } from '../../businessLogic/todos.mjs'
+import { getTraceId, getUserId } from '../utils.mjs'
+import { queryTodosInDb } from '../../businessLogic/todos.mjs'
 import { createLogger } from '../../utils/logger.mjs'
+import httpErrorHandler from '@middy/http-error-handler'
 
 const logger = createLogger("getTodos")
 
@@ -23,7 +24,7 @@ export const handler = middy()
 
       logger.info(`[getTodos | ${traceId}] Received request for: ${userId}`)
 
-      const items = await getTodos(userId)
+      const items = await queryTodosInDb(userId)
       return {
         statusCode: 200,
         body: JSON.stringify({

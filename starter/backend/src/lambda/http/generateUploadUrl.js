@@ -2,8 +2,9 @@ import middy from '@middy/core'
 import cors from '@middy/http-cors'
 import createError from 'http-errors'
 import { generateUploadUrl } from '../../fileStorage/attachmentUtils.mjs'
-import { getTime, putTimeTakenMetric } from '../utils.mjs'
+import { getTime, getTraceId, putTimeTakenMetric } from '../utils.mjs'
 import { createLogger } from '../../utils/logger.mjs'
+import httpErrorHandler from '@middy/http-error-handler'
 
 const logger = createLogger("generateUploadUrl")
 

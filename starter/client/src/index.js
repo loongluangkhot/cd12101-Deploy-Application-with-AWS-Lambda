@@ -13,7 +13,7 @@ ReactDOM.render(
     clientId={clientId}
     redirectUri={window.location.origin}
     audience={`https://${domain}/api/v2/`}
-    scope="read:todo write:todo delete:todo"
+    scope="read:todos write:todo delete:todo"
   >
     <App />
   </Auth0Provider>,
